@@ -1,0 +1,85 @@
+"""
+Created on Tue Aug 13 02:30:40 2024
+
+@author: leszekwierzchleyski
+"""
+
+"""This code Performs K-fold cross-validation on the Gradient Boosted Tree Model."""
+
+import pandas as pd
+import xgboost as xg
+
+
+"""Many thanks to Guillem SD for this data set. To produce a fresh link please 
+visit https://www.kaggle.com/datasets/guillemservera/precious-metals-data. 
+Licence Link https://creativecommons.org/licenses/by-nc/4.0/."""
+
+
+filepath = 'https://storage.googleapis.com/kagglesdsdata/datasets/3625760/8779871/individual_data/Palladium_data.csv?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=gcp-kaggle-com%40kaggle-161607.iam.gserviceaccount.com%2F20240813%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20240813T014323Z&X-Goog-Expires=259200&X-Goog-SignedHeaders=host&X-Goog-Signature=2f8b68540ff1cf69701bccb607bca942302cfdb18d156201706bc6545f4f4cd5a0fbbe27b9e9c53e0549fbb5e543fed3e3cdb92f47de99cbeaf9ce24fc87267d9846bf4bb38fdf4bb853a5f287b71b9e3cf3fb170ad729511f589dd8e71218aef1ccffa0acb4c9f84c4adde5bf3ec91d5dc38953efd5e0b626decbab596828f19544e3c1c434a6318b19e40d517c90352ebdc42fe85925fb9f114ae0eb37b63aae68c0520033c090058c6889aea5c863b7a50d677d603ba167d14df41639195146b9c869aa6ac3e2055420abc03b89a209d44afa2a51d4940f9bbe1db84799de0046f0ed31a57c441b7b2e65298adc4bdf09c3ec2213dcf51f1dcf2003bb5116'
+dataframe = pd.read_csv(filepath)
+dataframe.drop(columns=["date"], inplace=True)
+print(dataframe.head())
+dataframe
+
+"""Prepare labels for training"""
+
+future_list = []
+
+for i in range(len(dataframe)-10):
+    future = dataframe.iloc[:,3][i+10] - dataframe.iloc[:,3][i]
+    future_list.append(future)
+
+label_list = []
+for i in future_list:
+    if i >= 20:
+        label = 1
+    else:
+        label = 0
+    label_list.append(label)
+label_list.append(0)
+label_list.append(0)
+label_list.append(0)
+label_list.append(0)
+label_list.append(0)
+label_list.append(0)
+label_list.append(0)
+label_list.append(0)
+label_list.append(0)
+label_list.append(0)
+
+"""Prepare data for Boosted Tree Model."""
+
+y_train = pd.DataFrame({'label_list': label_list})
+dataframe.insert(5,'label_list', label_list, True )
+dtrain = xg.DMatrix(dataframe, label=y_train, enable_categorical=True)
+
+"""Build search spaces and run K-Fold cross validation"""
+
+param = {"max_depth": 6, "eta": 0.3263, "objective": "binary:logistic", "kernel": 'rbf','n_estimators': 60}
+num_round = 5
+xg.cv(
+    param,
+    dtrain,
+    num_round,
+    nfold=5,
+    metrics={"error"},
+    seed=0,
+    callbacks=[xg.callback.EvaluationMonitor(show_stdv=True)],
+)
+
+param = {"max_depth": 6, "eta": 0.3263, "objective": "reg:squarederror", "kernel": 'rbf','n_estimators': 60}
+num_round = 5
+xg.cv(
+    param,
+    dtrain,
+    num_round,
+    nfold=5,
+    metrics={"rmse"},
+    seed=0,
+    callbacks=[xg.callback.EvaluationMonitor(show_stdv=False)],
+)
+
+
+
+
+
