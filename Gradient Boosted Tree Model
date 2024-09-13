@@ -59,7 +59,7 @@ label_list.append(0)
 """Prepare data for Boosted Tree Model and create test set."""
 
 y_train = pd.DataFrame({'Buy?': label_list})
-dataframe.insert(5,'Buy?', label_list, True )
+
 x_train, x_test, y_train, y_test= model_selection.train_test_split(dataframe, y_train, test_size=0.2, random_state=1)
 
 
