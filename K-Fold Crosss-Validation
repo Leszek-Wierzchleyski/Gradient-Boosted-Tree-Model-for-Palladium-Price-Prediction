@@ -53,7 +53,7 @@ label_list.append(0)
 """Prepare data for Boosted Tree Model."""
 
 y_train = pd.DataFrame({'label_list': label_list})
-dataframe.insert(5,'label_list', label_list, True )
+
 dtrain = xg.DMatrix(dataframe, label=y_train, enable_categorical=True)
 
 """Build search spaces and run K-Fold cross validation"""
